@@ -1,0 +1,54 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="node_modules/intl-tel-input/build/css/intlTelInput.css" />
+        <style>
+            .country-list {
+                position: relative;
+                width: 400px;
+            }
+            .country-search > input {
+                position: relative;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+                right: auto;
+            }
+            .country-search {
+                z-index: 2;
+                list-style: none;
+                text-align: left;
+                padding: 0;
+                margin: 0 0 0 -1px;
+                box-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+                background-color: white;
+                border: 1px solid #CCC;
+                white-space: nowrap;
+                width: 400px;
+            }
+        </style>
+        <script src="build/ng-intl-tel-mini.js"></script>
+        <script>
+            var app = angular.module('test-app', ['ng-intl-tel-mini']);
+            app.controller('BlahController', function ($scope) {
+                $scope.country = 'us';
+                $scope.isValid = function (inputValid, error, phoneNumber) {
+                    $scope.inputValid = inputValid;
+                    $scope.inputError = error;
+                    $scope.inputNum = phoneNumber;
+                };
+            });
+        </script>
+    </head>
+    <body ng-app="test-app">
+        <div ng-controller="BlahController">
+            <ul>
+                <li>IsValid: {{inputValid}}</li>
+                <li>Error: {{inputError}}</li>
+                <li>Number: {{inputNum}}</li>
+                <li>Country: {{country}}</li>
+            </ul>
+            <ng-intl-tel-mini on-number-validity-check="isValid($isValid, $error, $phoneNumber)" show-search="true" country="country" />
+        </div>
+    </body>
+</html>
