@@ -1,6 +1,6 @@
 {
   "name": "ng-intl-tel-mini",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A minimal wrapper around the utils package from intl-tel-input.",
   "main": "build/ng-intl-tel-mini.min.js",
   "scripts": {

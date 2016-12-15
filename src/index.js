@@ -95,6 +95,7 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
                         $isValid: errorCode === 0,
                         $error: errorCode,
                         $phoneNumber: utils.formatNumber(val, scope.country, utils.numberFormat.INTERNATIONAL),
+                        $inputVal: val,
                     });
                 });
             }
