@@ -38,14 +38,16 @@ Create the directive:
     <ng-intl-tel-mini on-number-validity-check="isValid($isValid, $error, $phoneNumber)" show-search="true" country="country" />
 ```
 
-*on-number-validity-check* : Callback for when we perform a validity check. Populates 3 variables
+**on-number-validity-check** : Callback for when we perform a validity check. Populates 3 variables
+
     * $isValid: boolean - true if the number is considered valid.
     * $error: int - the error code for the number
     * $phoneNumber: string - a formated number in the style of INTERNATIONAL
+    * $inputVal: string - the value put into the text box
 
-*show-search* : If we should add in the search option to the input.
+**show-search** : If we should add in the search option to the input.
 
-*country* : The default country we should use. This variable will be updated as the country gets changed.
+**country** : The default country we should use. This variable will be updated as the country gets changed.
 
 ### Styling
 Same as [intl-tel-input](https://github.com/jackocnr/intl-tel-input) except for search:
