@@ -200,7 +200,7 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
             let example = utils.getExampleNumber(scope.country, 0, utils.numberType.MOBILE);
             scope.phoneHint = example;
             window.addEventListener('click', windowClicked);
-            scope.on('$destroy', () => {
+            scope.$on('$destroy', () => {
                 window.removeEventListener(windowClicked);
             });
         }
