@@ -47,7 +47,10 @@ const app = angular.module('ng-intl-tel-mini', []);
 app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
     let dialCodeMap = {};
     for (let i = 0; i < allCountries.length; i++) {
-        dialCodeMap[allCountries[i].dialCode] = allCountries[i].iso2;
+        if (!dialCodeMap[allCountries[i].dialCode]) {
+            dialCodeMap[allCountries[i].dialCode] = [];
+        }
+        dialCodeMap[allCountries[i].dialCode][allCountries[i].priority] = allCountries[i].iso2;
     }
     return {
         template: `
@@ -76,32 +79,86 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
             isValidCallback: '&onNumberValidityCheck',
             country: '=country',
             showSearch: '@showSearch',
+            customCountryFilter: '=countryFilter',
         },
         link(scope, element, attr) {
+            let countryFilterMap = {};
+            function findBestCountryMatch(dialCode) {
+                let countries = dialCodeMap[dialCode];
+                if (!countries) {
+                    return scope.country;
+                }
+                for (let i = 0; i < countries.length; i++) {
+                    if (scope.country !== countries[i]) {
+                        continue;
+                    }
+                    if (countryFilterMap[countries[i]]) {
+                        return countries[i];
+                    }
+                }
+                for (let i = 0; i < countries.length; i++) {
+                    if (countryFilterMap[countries[i]]) {
+                        return countries[i];
+                    }
+                }
+                return scope.country;
+            }
+            function getCountry(dialCode) {
+                let countries = dialCodeMap[dialCode];
+                if (!countries) {
+                    return null;
+                }
+                for (let i = 0; i < countries.length; i++) {
+                    if (countryFilterMap[countries[i]]) {
+                        return countries[i];
+                    }
+                }
+                return null;
+            }
             function valueChanged() {
                 let val = scope.phoneText;
                 //detect country change
                 if (val && val.length > 2 && val.charAt(0) === '+') {
                     let space = val.indexOf(' ');
-                    if (space > 0 && space < 4 && dialCodeMap[val.substr(1, space - 1)]) {
-                        scope.country = dialCodeMap[val.substr(1, space - 1)];
+                    if (space > 0 && space < 4 && dialCodeMap[val.substr(1, space - 1)] &&
+                            (!scope.customCountryFilter || getCountry(val.substr(1, space - 1)) !== null)) {
+                        scope.country = findBestCountryMatch(val.substr(1, space - 1));
                         let example = utils.getExampleNumber(scope.country, 0, utils.numberType.MOBILE);
                         scope.phoneHint = example;
                     }
                 }
                 let errorCode = utils.getValidationError(val, scope.country);
+                let formatted = utils.formatNumber(val, scope.country, utils.numberFormat.INTERNATIONAL);
+                if (errorCode === 0 && scope.customCountryFilter &&
+                        formatted.indexOf(' ') > -1 &&
+                        getCountry(formatted.substr(1, formatted.indexOf(' ') - 1)) === null) {
+                    errorCode = 1;
+                }
                 $timeout(() => {
                     scope.isValidCallback({
                         $isValid: errorCode === 0,
                         $error: errorCode,
-                        $phoneNumber: utils.formatNumber(val, scope.country, utils.numberFormat.INTERNATIONAL),
+                        $phoneNumber: formatted,
                         $inputVal: val,
                     });
                 });
             }
             scope.isCountryListVisible = false;
             scope.input = {searchText: ''};
-            scope.countries = allCountries;
+            if (scope.customCountryFilter) {
+                for (let i = 0; i < scope.customCountryFilter.length; i++) {
+                    countryFilterMap[scope.customCountryFilter[i]] = true;
+                }
+                scope.countries = [];
+                for (let i = 0; i < allCountries.length; i++) {
+                    if (!countryFilterMap[allCountries[i].iso2]) {
+                        continue;
+                    }
+                    scope.countries.push(allCountries[i]);
+                }
+            } else {
+                scope.countries = allCountries;
+            }
             scope.phoneChanged = function () {
                 valueChanged();
             };
