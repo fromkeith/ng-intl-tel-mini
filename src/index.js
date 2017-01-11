@@ -182,8 +182,27 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
                 }
                 return false;
             };
+            function windowClicked(e) {
+                if (!scope.isCountryListVisible) {
+                    return;
+                }
+                let cur = e.target;
+                for (;cur;) {
+                    if (cur === element[0]) {
+                        return;
+                    }
+                    cur = cur.parentNode;
+                }
+                $timeout(() => {
+                    scope.isCountryListVisible = false;
+                });
+            }
             let example = utils.getExampleNumber(scope.country, 0, utils.numberType.MOBILE);
             scope.phoneHint = example;
+            window.addEventListener('click', windowClicked);
+            scope.on('$destroy', () => {
+                window.removeEventListener(windowClicked);
+            });
         }
     };
 }]);
