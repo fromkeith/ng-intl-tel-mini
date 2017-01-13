@@ -219,8 +219,13 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
                     valueChanged();
                 }
             };
-            scope.toggleSelector = function () {
+            scope.toggleSelector = function ($event) {
                 scope.isCountryListVisible = !scope.isCountryListVisible;
+                if ($event) {
+                    $event.preventDefault();
+                    $event.stopPropogation();
+                }
+                return false;
             };
             scope.countryFilter = function (value, index, array) {
                 if (!scope.input.searchText) {
