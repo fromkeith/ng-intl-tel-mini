@@ -39,6 +39,15 @@ const utils = window.intlTelInputUtils;
 // include their flag utils
 const allCountries = require('./../gen/data.js'); // exports allCountries
 
+let codeToCountry = {};
+for (let i = 0; i < allCountries.length; i++) {
+    codeToCountry[allCountries[i].iso2] = allCountries[i];
+}
+
+// https://en.wikipedia.org/wiki/List_of_North_American_Numbering_Plan_area_codes#Non-geographic_area_codes
+const regionlessNanpNumbers = ['800', '822', '833', '844', '855', '866', '877', '880', '881', '882', '883', '884', '885', '886', '887', '888', '889'];
+
+
 // our work
 const angular = require('angular');
 
@@ -64,12 +73,12 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
             <input ng-if="showSearch" type="text" ng-model="input.searchText"/>
         </div>
         <ul class="country-list" ng-show="isCountryListVisible">
-            <li class="country" ng-repeat="c in countries | filter:countryFilter" ng-class="{active: c.iso2 === country}" ng-click="setCountry(c)">
+            <li class="country" ng-repeat="c in countries | filter:countryFilter track by c.iso2" ng-class="{active: c.iso2 === country}" ng-click="setCountry(c)">
                 <div class="flag-box">
-                    <div class="flag iti-flag {{c.iso2}}"></div>
+                    <div class="flag iti-flag {{::c.iso2}}"></div>
                 </div>
-                <span class="country-name">{{c.name}}</span>
-                <span class="dial-code">{{c.dialCode}}</span>
+                <span class="country-name">{{::c.name}}</span>
+                <span class="dial-code">{{::c.dialCode}}</span>
             </li>
         </ul>
     </div>
@@ -80,28 +89,50 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
             country: '=country',
             showSearch: '@showSearch',
             customCountryFilter: '=countryFilter',
+            nationalMode: '@nationalMode'
         },
         link(scope, element, attr) {
             let countryFilterMap = {};
-            function findBestCountryMatch(dialCode) {
-                let countries = dialCodeMap[dialCode];
-                if (!countries) {
-                    return scope.country;
+            let selectedCountryDialCode = '1';
+            // based off of ng-intl-min._getDialCode
+            // try and extract a valid international dial code from a full telephone number
+            // Note: returns the raw string inc plus character and any whitespace/dots etc
+            function getDialCode(number) {
+                if (!number) {
+                    return '';
                 }
-                for (let i = 0; i < countries.length; i++) {
-                    if (scope.country !== countries[i]) {
-                        continue;
-                    }
-                    if (countryFilterMap[countries[i]]) {
-                        return countries[i];
+                // only interested in international numbers (starting with a plus)
+                if (number.charAt(0) !== '+') {
+                    return '';
+                }
+                let dialCode = '';
+                let numericChars = '';
+                // iterate over chars
+                for (let i = 1; i < number.length; i++) {
+                    let c = number.charAt(i);
+                    // if char is number
+                    if (!isNaN(parseInt(c)) && String(parseInt(c)) === c) {
+                        numericChars += c;
+                        // if current numericChars make a valid dial code
+                        if (dialCodeMap[numericChars]) {
+                            dialCode = numericChars;
+                        }
+                        // longest dial code is 4 chars
+                        if (numericChars.length === 4) {
+                            break;
+                        }
                     }
                 }
-                for (let i = 0; i < countries.length; i++) {
-                    if (countryFilterMap[countries[i]]) {
-                        return countries[i];
-                    }
+                return dialCode;
+            }
+            // check if the given number is a regionless NANP number (expects the number to contain an international dial code)
+            function isRegionlessNanp(number) {
+                let numeric = getNumeric(number);
+                if (numeric.charAt(0) === '1') {
+                    let areaCode = numeric.substr(1, 3);
+                    return (regionlessNanpNumbers.indexOf(areaCode) > -1);
                 }
-                return scope.country;
+                return false;
             }
             function getCountry(dialCode) {
                 let countries = dialCodeMap[dialCode];
@@ -115,17 +146,47 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
                 }
                 return null;
             }
+            // extract the numeric digits from the given string
+            function getNumeric(s) {
+                if (!s) {
+                    return s;
+                }
+                return s.replace(/\D/g, '');
+            }
             function valueChanged() {
                 let val = scope.phoneText;
                 //detect country change
-                if (val && val.length > 2 && val.charAt(0) === '+') {
-                    let space = val.indexOf(' ');
-                    if (space > 0 && space < 4 && dialCodeMap[val.substr(1, space - 1)] &&
-                            (!scope.customCountryFilter || getCountry(val.substr(1, space - 1)) !== null)) {
-                        scope.country = findBestCountryMatch(val.substr(1, space - 1));
-                        let example = utils.getExampleNumber(scope.country, 0, utils.numberType.MOBILE);
-                        scope.phoneHint = example;
+                if (val && scope.nationalMode && selectedCountryDialCode === '1' && val.charAt(0) !== '+') {
+                  if (val.charAt(0) !== '1') {
+                    val = '1' + val;
+                  }
+                  val = '+' + val;
+                }
+                let dialCode = getDialCode(val),
+                    numeric = getNumeric(val),
+                    countryCode = null;
+                if (!val || val === '+') {
+                    countryCode = scope.country;// unchanged
+                } else if (dialCode) {
+                    let countries = dialCodeMap[dialCode],
+                        alreadySelected = (selectedCountryDialCode === dialCode),
+                        isNanpAreaCode = (dialCode === '1' && numeric.length >= 4),
+                        nanpSelected = (selectedCountryDialCode === '1');
+
+                    if (!(nanpSelected && isRegionlessNanp(numeric)) && (!alreadySelected || isNanpAreaCode)) {
+                        // if using onlyCountries option, countryCodes[0] may be empty, so we must find the first non-empty index
+                        for (let i = 0; i < countries.length; i++) {
+                            if (countryFilterMap[countries[i]]) {
+                                countryCode = countries[i];
+                                break;
+                            }
+                        }
                     }
+                } else if (val.charAt(0) === '+' && numeric.length > 0) {
+                    countryCode = '';
+                }
+                if (countryCode) {
+                    scope.setCountry(codeToCountry[countryCode], true);
                 }
                 let errorCode = utils.getValidationError(val, scope.country);
                 let formatted = utils.formatNumber(val, scope.country, utils.numberFormat.INTERNATIONAL);
@@ -143,32 +204,20 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
                     });
                 });
             }
-            scope.isCountryListVisible = false;
-            scope.input = {searchText: ''};
-            if (scope.customCountryFilter) {
-                for (let i = 0; i < scope.customCountryFilter.length; i++) {
-                    countryFilterMap[scope.customCountryFilter[i]] = true;
-                }
-                scope.countries = [];
-                for (let i = 0; i < allCountries.length; i++) {
-                    if (!countryFilterMap[allCountries[i].iso2]) {
-                        continue;
-                    }
-                    scope.countries.push(allCountries[i]);
-                }
-            } else {
-                scope.countries = allCountries;
-            }
+
             scope.phoneChanged = function () {
                 valueChanged();
             };
-            scope.setCountry = function (c) {
+            scope.setCountry = function (c, noTrigger) {
                 scope.country = c.iso2;
+                selectedCountryDialCode = c.dialCode;
                 scope.isCountryListVisible = false;
-                scope.input.searchText = '';
                 let example = utils.getExampleNumber(scope.country, 0, utils.numberType.MOBILE);
                 scope.phoneHint = example;
-                valueChanged();
+                if (!noTrigger) {
+                    scope.input.searchText = '';
+                    valueChanged();
+                }
             };
             scope.toggleSelector = function () {
                 scope.isCountryListVisible = !scope.isCountryListVisible;
@@ -197,8 +246,28 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
                     scope.isCountryListVisible = false;
                 });
             }
-            let example = utils.getExampleNumber(scope.country, 0, utils.numberType.MOBILE);
-            scope.phoneHint = example;
+            scope.isCountryListVisible = false;
+            scope.input = {searchText: ''};
+            if (scope.customCountryFilter) {
+                for (let i = 0; i < scope.customCountryFilter.length; i++) {
+                    countryFilterMap[scope.customCountryFilter[i]] = true;
+                }
+                scope.countries = [];
+                for (let i = 0; i < allCountries.length; i++) {
+                    if (!countryFilterMap[allCountries[i].iso2]) {
+                        continue;
+                    }
+                    scope.countries.push(allCountries[i]);
+                }
+            } else {
+                scope.countries = allCountries;
+            }
+            for (let i = 0; i < scope.countries.length; i++) {
+                if (scope.countries[i].iso2 === scope.country) {
+                    scope.setCountry(scope.countries[i]);
+                    break;
+                }
+            }
             window.addEventListener('click', windowClicked);
             scope.$on('$destroy', () => {
                 window.removeEventListener('click', windowClicked);
