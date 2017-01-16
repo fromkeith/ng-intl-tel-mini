@@ -65,7 +65,7 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
         template: `
 <div class="ng-intl-tel-min intl-tel-input allow-dropdown">
     <div class="flag-container">
-        <div class="selected-flag" ng-click="toggleSelector()">
+        <div class="selected-flag" ng-click="toggleSelector()" ng-class="::{'no-click-on-select': turnOffCountryDropdown}">
             <div class="flag iti-flag {{country}}"></div>
             <div class="iti-arrow"></div>
         </div>
@@ -89,7 +89,8 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
             country: '=country',
             showSearch: '@showSearch',
             customCountryFilter: '=countryFilter',
-            nationalMode: '@nationalMode'
+            nationalMode: '@nationalMode',
+            turnOffCountryDropdown: '@turnOffCountryDropdown'
         },
         link(scope, element, attr) {
             let countryFilterMap = {};
@@ -220,6 +221,9 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
                 }
             };
             scope.toggleSelector = function ($event) {
+                if (scope.turnOffCountryDropdown) {
+                    return;
+                }
                 scope.isCountryListVisible = !scope.isCountryListVisible;
                 if ($event) {
                     $event.preventDefault();
