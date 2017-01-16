@@ -277,6 +277,9 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
             scope.$on('$destroy', () => {
                 window.removeEventListener('click', windowClicked);
             });
+            scope.$on('ng-intl-tel-mini.setCountry', (e, countryCode) => {
+                scope.setCountry(codeToCountry[countryCode]);
+            });
         }
     };
 }]);

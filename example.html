@@ -37,6 +37,9 @@
                     $scope.inputError = error;
                     $scope.inputNum = phoneNumber;
                 };
+                $scope.setItToCanada = function () {
+                    $scope.$broadcast('ng-intl-tel-mini.setCountry', 'ca');
+                }
                 $scope.allowedCountries = ['us', 'ca', 'au', 'ai', 'be', 'cn'];
             });
         </script>
@@ -48,6 +51,9 @@
                 <li>Error: {{inputError}}</li>
                 <li>Number: {{inputNum}}</li>
                 <li>Country: {{country}}</li>
+                <li>
+                    <button ng-click="setItToCanada()">Set to Canada</button>
+                </li>
             </ul>
             <ng-intl-tel-mini on-number-validity-check="isValid($isValid, $error, $phoneNumber)" show-search="true" country="country" country-filter="allowedCountries" ></ng-intl-tel-mini>
             <br />
