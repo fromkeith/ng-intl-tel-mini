@@ -284,6 +284,10 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
             scope.$on('ng-intl-tel-mini.setCountry', (e, countryCode) => {
                 scope.setCountry(codeToCountry[countryCode]);
             });
+            scope.$on('ng-intl-tel-mini.setNumber', (e, number) => {
+                scope.phoneText = number;
+                valueChanged();
+            });
         }
     };
 }]);

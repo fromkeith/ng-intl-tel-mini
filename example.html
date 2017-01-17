@@ -45,7 +45,10 @@
                 };
                 $scope.setItToCanada = function () {
                     $scope.$broadcast('ng-intl-tel-mini.setCountry', 'ca');
-                }
+                };
+                $scope.setItToNum = function () {
+                    $scope.$broadcast('ng-intl-tel-mini.setNumber', '+1 234 456-8790')
+                };
                 $scope.allowedCountries = ['us', 'ca', 'au', 'ai', 'be', 'cn'];
             });
         </script>
@@ -59,6 +62,9 @@
                 <li>Country: {{country}}</li>
                 <li>
                     <button ng-click="setItToCanada()">Set to Canada</button>
+                </li>
+                <li>
+                    <button ng-click="setItToNum()">Set to +1 234 456-8790</button>
                 </li>
             </ul>
             <ng-intl-tel-mini on-number-validity-check="isValid($isValid, $error, $phoneNumber)" show-search="true" country="country" country-filter="allowedCountries" ></ng-intl-tel-mini>
