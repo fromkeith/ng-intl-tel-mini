@@ -1,11 +1,10 @@
 {
   "name": "ng-intl-tel-mini",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "A minimal wrapper around the utils package from intl-tel-input.",
   "main": "build/ng-intl-tel-mini.min.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "gulp copy-data"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "fromkeith <foremery@gmail.com>",
   "license": "MIT",
