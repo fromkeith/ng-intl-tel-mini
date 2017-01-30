@@ -222,12 +222,17 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
             };
             scope.toggleSelector = function ($event) {
                 if (scope.turnOffCountryDropdown) {
-                    return;
+                    return false;
                 }
                 scope.isCountryListVisible = !scope.isCountryListVisible;
                 if ($event) {
                     $event.preventDefault();
                     $event.stopPropogation();
+                }
+                if (scope.showSearch && scope.isCountryListVisible) {
+                    $timeout(() => {
+                        element[0].querySelector('.country-search input').focus();
+                    }, 10);
                 }
                 return false;
             };
