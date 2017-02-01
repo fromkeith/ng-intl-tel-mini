@@ -1,6 +1,6 @@
 {
   "name": "ng-intl-tel-mini",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "A minimal wrapper around the utils package from intl-tel-input.",
   "main": "build/ng-intl-tel-mini.min.js",
   "scripts": {
@@ -28,6 +28,15 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "browserify": {
-    "transform": [["babelify", { "presets": ["es2015"] }]]
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015"
+          ]
+        }
+      ]
+    ]
   }
 }
