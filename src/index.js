@@ -262,7 +262,15 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
             }
             scope.isCountryListVisible = false;
             scope.input = {searchText: ''};
-            if (scope.customCountryFilter) {
+            const applyInitialCountry = () => {
+                for (let i = 0; i < scope.countries.length; i++) {
+                    if (scope.countries[i].iso2 === scope.country) {
+                        scope.setCountry(scope.countries[i]);
+                        break;
+                    }
+                }
+            };
+            const applyCustomCountiresFilter = () => {
                 for (let i = 0; i < scope.customCountryFilter.length; i++) {
                     countryFilterMap[scope.customCountryFilter[i]] = true;
                 }
@@ -273,15 +281,25 @@ app.directive('ngIntlTelMini', ['$timeout', function ($timeout) {
                     }
                     scope.countries.push(allCountries[i]);
                 }
+            };
+            if (scope.customCountryFilter) {
+                applyCustomCountiresFilter();
             } else {
                 scope.countries = allCountries;
+                let lateBind = scope.$watch(() => {
+                    return scope.customCountryFilter;
+                }, () => {
+                    if (!scope.customCountryFilter) {
+                        return;
+                    }
+                    if (lateBind) {
+                        lateBind();
+                    }
+                    applyCustomCountiresFilter();
+                    applyInitialCountry();
+                });
             }
-            for (let i = 0; i < scope.countries.length; i++) {
-                if (scope.countries[i].iso2 === scope.country) {
-                    scope.setCountry(scope.countries[i]);
-                    break;
-                }
-            }
+            applyInitialCountry();
             window.addEventListener('click', windowClicked);
             scope.$on('$destroy', () => {
                 window.removeEventListener('click', windowClicked);

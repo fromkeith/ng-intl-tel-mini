@@ -36,8 +36,7 @@
         <script src="build/ng-intl-tel-mini.js"></script>
         <script>
             var app = angular.module('test-app', ['ng-intl-tel-mini']);
-            app.controller('BlahController', function ($scope) {
-                $scope.country = 'us';
+            app.controller('BlahController', function ($scope /*$timeout*/) {
                 $scope.isValid = function (inputValid, error, phoneNumber) {
                     $scope.inputValid = inputValid;
                     $scope.inputError = error;
@@ -49,7 +48,10 @@
                 $scope.setItToNum = function () {
                     $scope.$broadcast('ng-intl-tel-mini.setNumber', '+1 234 456-8790')
                 };
-                $scope.allowedCountries = ['us', 'ca', 'au', 'ai', 'be', 'cn'];
+                //$timeout(() => {
+                    $scope.allowedCountries = ['us', 'ca', 'au', 'ai', 'be', 'cn'];
+                    $scope.country = 'us';
+                //}, 10000);
             });
         </script>
     </head>
